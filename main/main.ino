@@ -12,6 +12,8 @@
 // DECLARATIONS HERE! //
 int DualSpeedValue = 0;                                       // Combined motor speed variable
 int Mode           = 2;                                       // MODE in which the MD25 will operate selector value
+const int ledPin   = 7;                                       // Pin for the LED   
+const int servoPin = 9;                                       // Pin for the Servo  
 
 float Wheel_1_Distance_MM = 0;                                // Wheel 1 travel distance variable
 float Wheel_2_Distance_MM = 0;                                // Wheel 2 travel distance variable
@@ -22,8 +24,11 @@ float OvershootDistance     = 0;                              // Robot overshoot
 float prevOvershootAngle    = 0;                              // Robot overshoot angle
 float nextOvershootAngle    = 0;                              // Robot overshoot angle
 float OvershootAngle        = 0;                              // Robot overshoot angle
+float ledPinHighStatus      = 0;                              // Record whether the LED pin is on or not
 
 unsigned long time;                                           // Variable to hold the time for millis() functions
+
+Servo dropServo;                                              // Define servo for Arduino  
 
 void setup(){
         Wire.begin();
@@ -36,10 +41,11 @@ void setup(){
         Wire.endTransmission();
 
         encodeReset();                                        // Cals a function that resets the encoder values to 0
+        dropServo.attach(servoPin);                           // Attaches servo so it can be used.
+        pinMode(ledPin, OUTPUT);                              // Define the LED as an output so that it can light    
 }
 
 void loop(){
-// your script goes here
 }
 
 void move_forward(float x, int DualSpeedValue){               // DEPENDENCY FUNCTION, DO NOT CALL DIRECTLY: This function moves the platform forward by a distance of 'x'mm
@@ -227,5 +233,47 @@ void StationaryCheck(){                                       // Function to che
         if (abs(current_encoder_count) > abs(previous_encoder_count)) {
                 StationaryCheck();
         }
+
+void LightUp() {                                              // Light up an LED at waypoint  
+        if (ledPinHighStatus = 1) {                           // if LED is on, turn it off
+                digitalWrite(ledPin, LOW);
+                ledPinHighStatus = 0;                         // Record LED AS OFF  
+        }
+        else if (ledPinHighStatus = 0){                       // if LED is on, pulse  
+                digitalWrite(ledPin, HIGH);
+                ledPinHighStatus = 1;
+                delay(10);
+                digitalWrite(ledPin, LOW);
+                ledPinHighStatus = 0;
+
+        }        
 }
 
+void drop() {                                                 // Drop the assorted un-named candy  
+
+        StationaryCheck();                                    // Make sure robot is stationary
+        currentPos = analogRead(servoPin);                    // Grab the current value of servo position
+        if (currentPos != 0){                                 // If current position not 0, make it zero  
+                for (pos = currentPos; pos >= 0; pos-=1){      // Move the servo, yo
+                        dropServo.write(pos);
+                }
+        }  
+        else if (currentPos < 110){                           // Nove to the required position
+                for (pos = currentPos; pos <= 110; pos+=1){
+                        dropServo.write(pos);
+                }
+        }
+
+}
+
+void dispenserBack(){
+
+        currentPosBack = analogRead(servoPin);
+        for (pos = currentPosBackl; pos <= 110; pos -=1){
+                dropServo.write(pos)
+        }
+
+}
+
+
+}
