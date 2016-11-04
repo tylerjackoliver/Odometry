@@ -266,11 +266,11 @@ void drop() {                                                 // Drop the assort
 
 }
 
-void dispenserBack(){
+void dispenserBack(){                                         // Move the servo back to the original position
 
-        currentPosBack = analogRead(servoPin);
+        currentPosBack = analogRead(servoPin);                // Read the current position of the servo
         for (pos = currentPosBackl; pos <= 110; pos -=1){
-                dropServo.write(pos)
+                dropServo.write(pos)                          // Move that servo, gurl. Werk it.  
         }
 
 }
