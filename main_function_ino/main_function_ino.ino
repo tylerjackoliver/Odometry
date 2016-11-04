@@ -2,7 +2,7 @@
 #include <Servo.h>                                            // Calls for Servo library
 
 #define MD25ADDRESS         0x58                              // Address of the MD25
-#define SPEED1              0x00                              // Byte to send speed to both motors for forward and backwards motion if operated in MODE 2 or 3 and Motor 1 Speed if in MODE 0 or 1
+#define SPEED1              (byte)0x00                              // Byte to send speed to both motors for forward and backwards motion if operated in MODE 2 or 3 and Motor 1 Speed if in MODE 0 or 1
 #define SPEED2              0x01                              // Byte to send speed for turn speed if operated in MODE 2 or 3 and Motor 2 Speed if in MODE 0 or 1
 #define ENCODERONE          0x02                              // Byte to read motor encoder 1
 #define ENCODERTWO          0x06                              // Byte to read motor encoder 2
@@ -21,6 +21,7 @@ int currentPosBack =0;
 
 float Wheel_1_Distance_MM = 0;                                // Wheel 1 travel distance variable
 float Wheel_2_Distance_MM = 0;                                // Wheel 2 travel distance variable
+float theta = 0;
 
 float prevOvershootDistance = 0;                              // Robot overshoot distance
 float nextOvershootDistance = 0;                              // Robot overshoot distance
@@ -29,8 +30,16 @@ float prevOvershootAngle    = 0;                              // Robot overshoot
 float nextOvershootAngle    = 0;                              // Robot overshoot angle
 float OvershootAngle        = 0;                              // Robot overshoot angle
 float ledPinHighStatus      = 0;                              // Record whether the LED pin is on or not
-float CF                    = 1.0;                              // Correction factor for the robot      
+float CF                    = 1.0;                              // Correction factor for the robot  
+float ds = 0;    
 unsigned long time;                                           // Variable to hold the time for millis() functions
+float botWidth = 0;
+float s = 0;
+float s_lower = 0;
+float s_higher = 0;
+float speedRatio = 0;
+float write2 = 0;
+
 
 
 Servo dropServo;                                              // Define servo for Arduino  
@@ -61,7 +70,7 @@ void move_forward(float x, int DualSpeedValue){               // DEPENDENCY FUNC
 
                 Wire.beginTransmission(MD25ADDRESS);          // Sets the acceleration to register 3
                 Wire.write(ACCELERATION);
-                Wire.write(3);
+                Wire.write(1);
                 Wire.endTransmission();
 
                 Wire.beginTransmission(MD25ADDRESS);          // Sets a combined motor speed value
@@ -81,7 +90,7 @@ void turn(float x, int DualSpeedValue){                       // DEPENDENCY FUNC
 
                 Wire.beginTransmission(MD25ADDRESS);          // Sets the acceleration to register 5
                 Wire.write(ACCELERATION);
-                Wire.write(5);
+                Wire.write(1);
                 Wire.endTransmission();
 
                 Wire.beginTransmission(MD25ADDRESS);          // Sets a combined motor speed value
@@ -138,7 +147,7 @@ float encoder2(){                                             // Function to rea
 void stopMotor(){                                             // Function to stop motors
         Wire.beginTransmission(MD25ADDRESS);                  // Sets the acceleration to register 3 (0.65s)
         Wire.write(ACCELERATION);
-        Wire.write(3);
+        Wire.write(1);
         Wire.endTransmission();
 
         Wire.beginTransmission(MD25ADDRESS);                  // Stops motors motor 1 if operated in MODE 0 or 1 and Stops both motors if operated in MODE 2 or 3
@@ -154,8 +163,8 @@ void stopMotor(){                                             // Function to sto
 }
 
 void mod_forward(float x, float CF){
-        if (x > 0) {                                          // Detects if movement is a forward movement
-                move_forward(x*CF, 255);
+        if (x < 0) {                                          // Detects if movement is a forward movement
+                move_forward(x*CF, 150);
         }
         else {                                                // Detects if movement is a backward movement
                 move_forward(x*CF, 0);
@@ -186,8 +195,8 @@ void mod_forward(float x, float CF){
 
 void mod_rotate(float r, float CF){
         float s = r * 0.1875;                                 // Calculates the distance, s, required to travel by one wheel to make angle r
-        if (r > 0) {                                          // Determines if the rotation is clockwise
-                turn(s*CF, 255);
+        if (r < 0) {                                          // Determines if the rotation is clockwise
+                turn(s*CF, 150);
         }
         else {                                                // Determines if the rotation is counter-clockwise
                 turn(s*CF, 0);
@@ -198,14 +207,14 @@ void mod_rotate(float r, float CF){
         Serial.print("First Overshoot Angle = ");
         Serial.println(prevOvershootAngle);
         encodeReset();
-        rotateCorrect(prevOvershootAngle);
+//        rotateCorrect(prevOvershootAngle);
 
         stopMotor();
         StationaryCheck();
         nextOvershootAngle = (prevOvershootAngle - encoder1());
         Serial.print("Second Overshoot Angle = ");
         Serial.println(prevOvershootAngle);
-        rotateCorrect(nextOvershootAngle);
+//        rotateCorrect(nextOvershootAngle);
 
         stopMotor();
         encodeReset();
@@ -279,21 +288,79 @@ void dispenserBack(){                                         // Move the servo 
 
 }
 
+//  void arcFoward(float r, float CF, float theta){
+//          ds = theta;
+//          botWidth = 0.22;
+//          s = r*ds;
+//          s_lower = s - botWidth / 2;
+//          s_higher = s + botWidth / 2;
+//          speedRatio = s_higher/s_lower;
+//          Wheel_1_Distance_MM = s_lower;
+//          Wheel_2_Distance_MM = s_higher;
+//          encoder1();                                           
+//          encoder2();
+//  
+//          while ((abs(encoder1()) <= abs(Wheel_1_Distance_MM)) && (abs(encoder2()) <= abs(Wheel_2_Distance_MM))) { // If statement to check the status of the traveled distance
+//  
+//                  Wire.beginTransmission(MD25ADDRESS);          // Sets the acceleration to register 5
+//                  Wire.write(ACCELERATION);
+//                  Wire.write(5);
+//                  Wire.endTransmission();
+//  
+//                  Wire.beginTransmission(MD25ADDRESS);          // Sets a combined motor speed value
+//                  Wire.write(SPEED2);
+//                  Wire.write(DualSpeedValue);
+//                  write2 = SPEED2*(1/speedRatio);
+//                  Wire.write(write2);
+//                  Wire.endTransmission();
+//          }
+//  }
+  
 
 
 //* MAIN SCRIPT FOR THE COURSE *//
 
 
 void loop(){
+  mod_forward(34, CF);                                        // Traverse the first part of the course
+  mod_rotate(-90, CF);                                          // Rotate the first corner 
+  LightUp();      
+  mod_forward(26, CF);                                       // 2 - 3
+  dispenserBack();
   drop();
-  mod_forward(100, CF);                                        // Traverse the first part of the course
-  mod_rotate(90, CF);                                          // Rotate the first corner 
+  LightUp();
+  mod_rotate(-90,CF);                                         // 3 - 4
+  mod_forward(50, CF);
+  dispenserBack();
+  LightUp();
+  mod_rotate(-90, CF);
+  dispenserBack();
+//  arc_forward(260, CF, 90);
+  LightUp();
+  drop();
+  dispenserBack();
+  mod_forward(660, CF);
+  LightUp();
+  mod_rotate(-90, CF);
+  mod_forward(400, CF);
+  LightUp();
+  drop();
+  dispenserBack();
+  mod_rotate(-90, CF);
+  mod_forward(400, CF);
+  LightUp();
+  mod_rotate(-90, CF);
+  mod_forward(400, CF);
   drop();
   LightUp();
   dispenserBack();
-  mod_forward(50,CF);
-  mod_rotate(-90,CF);
-  drop();
+  mod_rotate(-40, CF);
+  mod_forward(414, CF); // actually 414.5
   LightUp();
+  mod_rotate(-50, CF);
+  mod_forward(150, CF);
+  LightUp();
+  drop();
   dispenserBack();
+//  arc_forward(180, CF, 270);
 }
