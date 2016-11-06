@@ -164,10 +164,10 @@ void stopMotor(){                                             // Function to sto
 
 void mod_forward(float x, float CF){
         if (x < 0) {                                          // Detects if movement is a forward movement
-                move_forward(x*CF, 150);
+                move_forward(x*CF, 135);
         }
         else {                                                // Detects if movement is a backward movement
-                move_forward(x*CF, 0);
+                move_forward(x*CF, 106);
         }
         stopMotor();                                          // Stops the motor
         Serial.println("Motor Stopped");
@@ -181,7 +181,7 @@ void mod_forward(float x, float CF){
 
         // Below simply corrects is again, minimising error
         stopMotor();
-        Serial.println("Motor Stopped");
+        Serial.println("Motor35 Stopped");
         StationaryCheck();
         Serial.println("Robot has stopped");
         nextOvershootDistance = (prevOvershootDistance - encoder1());
@@ -194,12 +194,12 @@ void mod_forward(float x, float CF){
 }
 
 void mod_rotate(float r, float CF){
-        float s = r * 0.1875;                                 // Calculates the distance, s, required to travel by one wheel to make angle r
+        float s = r * 0.102;                                 // Calculates the distance, s, required to travel by one wheel to make angle r
         if (r < 0) {                                          // Determines if the rotation is clockwise
-                turn(s*CF, 150);
+                turn(s*CF, 135);
         }
         else {                                                // Determines if the rotation is counter-clockwise
-                turn(s*CF, 0);
+                turn(s*CF, 121);
         }
         stopMotor();                                          // Stops the motor
         StationaryCheck();
