@@ -16,8 +16,14 @@ float Wheel_2_Distance_CM = 0;                                // Wheel 2 travel 
 float x                   = 0;                                // Distance travelled variable
 //float DualSpeedValue      = 150;                              // Wheel speed value, forward/backward
 float rotateDualSpeedValue= 150;                              // Wheel speed value, rotational
-
-
+float r =  0;                                                 // Radius of the cirlce of the arc
+float l = 0;                                                  // Length of the circle of the arc
+float robotWidth = 0;                                         // Value for the width of the robot
+float deg = 0;                                                // Value of degrees for the arc function
+float ratio = 0;                                              // Initialise ratio variable for arc
+float w2Speed = 0;                                            // Variable to change wheel 2 seed for the arc
+float w1Speed = 0;                                            // Variable to change wheel 1 speed for the arc
+int ledPulse = 0;                                             // Variable to count pulses of an LED
 
 void setup(){
   Wire.begin();                                               // Begin I2C bus
@@ -201,9 +207,13 @@ void moveForward(float x){
   
 }
 void lightLED(){
+  ledPulse = 0;
+  while (ledPulse < 4){
    digitalWrite(7, HIGH);
-   delay(50);
-   digitalWrite(7, LOW); 
+   delay(100);
+   digitalWrite(7, LOW);
+   ledPulse += 1
+   } 
 }
 
 void turnRight(float x){
@@ -262,5 +272,42 @@ void turnRotate(float x, int DualSpeedValue){
                 turn(s, 128 - (DualSpeedValue - 128));
         }
         stopMotor();                                          // Stops the motor
+        encodeReset();
+}
+
+void arc(float r, float l, float deg){                        // Move the robot in an arc         
+        ratio = (r+robotWidth)/(r-robotWidth);                // Calculate the wheel speed ratio
+        setMode(0);                                           // Set the mode to 0 to control each motor individually
+        encoder1();
+        encoder2();
+
+        if (deg > 0){                                         // Turning left or turning right?
+              //* SPEED1 < SPEED2 *//
+          w1Speed = DualSpeedValue * ratio;                    // Set wheel speed off of nominal speed + ratio
+          w2Speed = DualSpeedValue;                            // Set wheel speed 2 
+          Wheel_1_Distance_CM = (r+w/2)*deg;
+          Wheel_2_Distance_CM = (r-w/2_*deg);
+}
+        else if (deg < 0){
+          w2Speed = DualSpeedValue * ratio;                    // Set wheel speed off of nominal speed + ratio
+          w1Speed = DualSpeedValue;                            // Set wheel speed 2 
+          Wheel_2_Distance_CM = (r+w/2)*deg;
+          Wheel_1_Distance_CM = (r-w/2_*deg);       
+}
+          //* BEGIN TRANSMISSION OF WHEEL READINGS *//
+        while (abs(encoder1()) <= abs(Wheel_1_Distance_CM) && abs(encoder2()) <= abs(Wheel_2_Distance_CM)){
+          Wire.beginTransmission(MD25ADDRESS);                     // Sets the acceleration to register 1 (6.375s)
+          Wire.write(ACCELERATION);
+          Wire.digitalWrite(1);
+          Wire.endTransmission();
+
+          Wire.beginTransmission(MD25ADDRESS);                     // Sets a combined motor speed value
+          Wire.write(SPEED2);
+          Wire.write(w2Speed);
+          Wire.write(SPEED1);
+          Wire.write(w1Speed);
+          Wire.endTransmission();
+}                                         
+        stopmotor();
         encodeReset();
 }
