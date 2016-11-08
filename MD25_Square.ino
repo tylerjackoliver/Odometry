@@ -1,4 +1,5 @@
 #include <Wire.h>                                             // Calls for I2C bus library
+#include <Servo.h>
 
 #define MD25ADDRESS         0x58                              // Address of the MD25
 #define SPEED1              0x00                              // Byte to send speed to both motors for forward and backwards motion if operated in MODE 2 or 3 and Motor 1 Speed if in MODE 0 or 1
@@ -28,9 +29,11 @@ float pi = 3.141592;
 int L = 0;
 int R = 0;
 double d = 0;
+Servo dropServo;
+int pos = 0;
+int time = 0;
 
 void setup(){
-  Wire.begin();                                               // Begin I2C bus
   Serial.begin(9600);                                         // Begin serial
   delay(100);                                                 // Wait for everything to power up
   pinMode(7, OUTPUT);
@@ -38,53 +41,59 @@ void setup(){
   Wire.write(MODE_SELECTOR);
   Wire.write(Mode);                                           
   Wire.endTransmission();
-
+  dropServo.attach(9);
   encodeReset();                                              // Cals a function that resets the encoder values to 0 
 }
 
 void loop(){
-
-//  moveForward(30);
-//  delay(10);
+  
+  moveWheel(25, 5, 85);
+  
+//    
+//  time = millis();
+//  servoSetup();
+//  delay(2000);
+//  moveForward(36);
+//  lightLED();
+//  delay(20);
+//  turnRight(18.8);
+//  lightLED();
+//  moveForward(25.3);
+//  servoSweep();
+//  
+//  
+//  delay(1000);
+//  setMode(2);
+//  turnLeft(16.8);
+//  delay(100);
+//  moveForward(50.8);
+//  turnLeft(16.8);
+//  lightLED();
+//  
+//  moveWheel(7, 21, 21.8);
+//  setMode(2);
+//  servoSweep();
+//  
+//  
+//  delay(1000);
 //  turnRight(19.7);
-//  delay(10);
-//  turnLeft(19.7);
-//  moveForward(30);
-////  turnLeft(19.7);
+//  lightLED();
+//  moveForward(69);
+//  lightLED();
+//  turnLeft(16.8);
+//  moveForward(42);
+//  servoSweep();
 //  delay(1000);
 //  
-//
-  delay(2000);
-  moveForward(38.5);
-  lightLED();
-  delay(20);
-  turnRight(19.4);
-  lightLED();
-  moveForward(25.3);
-  delay(2000);
-  setMode(2);
-  turnLeft(16.5);
-  delay(2000);
-  moveForward(50.8);
-  turnLeft(16.5);
-  lightLED();
-  moveWheel(7, 21, 22);
-  setMode(2);
-  delay(20);
-  turnRight(19.2);
-  lightLED();
-  //turnRight(19.4);
-  moveForward(66);
-  lightLED();
-  turnLeft(16.5);
-  moveForward(42);
-  lightLED();
-  turnLeft(16.5);
-  moveForward(40);
-  lightLED();
-  turnLeft(16.5);
-  moveForward(40);
-  lightLED();
+//  
+//  lightLED();
+//  turnLeft(16);
+//  moveForward(40);
+//  lightLED();
+//  turnLeft(16.8);
+//  moveForward(40);
+//  lightLED();
+  servoSweep();
 //  arc(26, 90);
   while(1);
   
@@ -374,4 +383,26 @@ void moveWheel(int R, int L, double d){
      stopMotor();
      delay(200);
      encodeReset();
+}
+
+void servoSweep(){ 
+    for (pos = 0; pos <= 110; pos += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    dropServo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+  for (pos = 110; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+    dropServo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+}
+
+void servoSetup(){
+  while (time < 3){
+      for (pos = 110; pos > 0; pos -= 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    dropServo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+}
 }
